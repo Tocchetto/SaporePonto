@@ -19,7 +19,7 @@ $mainGUI = GUICreate("SaporePonto", 1074, 486, 581, 288)
 $usersList = GUICtrlCreateList("", 16, 32, 281, 422)
 $usersListLabel = GUICtrlCreateLabel("Lista de Funcionários", 16, 14, 104, 17)
 $addUser = GUICtrlCreateButton("Acrescentar Funcionário", 152, 456, 147, 25)
-$MonthCal = GUICtrlCreateMonthCal("2017/05/20", 840, 32, 229, 164)
+$MonthCal = GUICtrlCreateMonthCal(_NowDate(), 840, 32, 229, 164)
 $usersInfoList = GUICtrlCreateList("", 304, 32, 521, 422,BitOr($WS_BORDER, $WS_VSCROLL))
 $editUser = GUICtrlCreateButton("Editar/Inserir Informações", 680, 456, 147, 25)
 $deleteUser = GUICtrlCreateButton("Excluir", 16, 456, 75, 25)
@@ -31,18 +31,8 @@ $previous = ""
 While 1
    $nMsg = GUIGetMsg()
    If GUICtrlRead($usersList) <> $previous Then
-	  $previous = GUICtrlRead($usersList)
-	  If Not(GUICtrlRead($usersList) == "") Then ;Esse if serve para quando excluir um funcioonário não ficar bugado a caixa de informações
-		 GUICtrlSetData($usersInfoList, "")
-		 If FileExists("funcionarios\" & GUICtrlRead($usersList) & "\" & StringReplace(_NowDate(),"/","-")) Then
-			listUserInfo($usersInfoList, $usersList)
-		 Else
-			GUICtrlSetData($usersInfoList, 'Sem dados para o funcionário "' & GUICtrlRead($usersList) & '" para o dia de hoje!')
-			GUICtrlSetData($usersInfoList, 'Clique no botão "Editar/Inserir Informações" para inserir informações para este funcionário.')
-		 EndIf
-	  EndIf
+	  updateInfoUsersList()
    EndIf
-   GUICtrlRead($MonthCal,2)
    Switch $nMsg
 	  Case $GUI_EVENT_CLOSE
 		 Exit
@@ -74,29 +64,42 @@ While 1
 			EndIf
 		 EndIf
 	  Case $editUser
-		 editInsertInterface()
-		 MsgBox(0,GUICtrlRead($usersList),GUICtrlRead($usersList))
-		 GUICtrlSetData($usersInfoList, "")
-		 $previous = ""
+		 If GUICtrlRead($usersList) == "" Then
+			MsgBox(48,"Usuário não selecionado", "Selecione um usuário para editar ou inserir informações!")
+		 Else
+			editInsertInterface()
+			GUICtrlSetData($usersInfoList, "")
+			$previous = ""
+		 EndIf
 	  Case $MonthCal
-		 ConsoleWrite(GUICtrlRead($MonthCal,2))
+		 updateInfoUsersList()
 	EndSwitch
  WEnd
 
 Func listUserInfo($usersInfoList, $usersList)
    GUICtrlSetData($usersInfoList, "Informações do Usuário: " & GUICtrlRead($usersList))
+   ;Colocar o resto dos dados aqui
 EndFunc
 
 Func createUserFiles()
-   DirCreate("funcionarios\" & GUICtrlRead($usersList) & "\" & StringReplace(_NowDate(),"/","-"))
-   FileWrite("funcionarios\" & GUICtrlRead($usersList) & "\" & StringReplace(_NowDate(),"/","-") & "\HorarioEntrada", "")
-   FileWrite("funcionarios\" & GUICtrlRead($usersList) & "\" & StringReplace(_NowDate(),"/","-") & "\HorarioEntrada2", "")
-   FileWrite("funcionarios\" & GUICtrlRead($usersList) & "\" & StringReplace(_NowDate(),"/","-") & "\HorarioSaida", "")
-   FileWrite("funcionarios\" & GUICtrlRead($usersList) & "\" & StringReplace(_NowDate(),"/","-") & "\HorarioSaida2", "")
+   DirCreate("funcionarios\" & GUICtrlRead($usersList) & "\" & StringReplace(GUICtrlRead($MonthCal,2),"/","-"))
+   FileWrite("funcionarios\" & GUICtrlRead($usersList) & "\" & StringReplace(GUICtrlRead($MonthCal,2),"/","-") & "\HorarioEntrada", GUICtrlRead($enterTimeInput))
+   FileWrite("funcionarios\" & GUICtrlRead($usersList) & "\" & StringReplace(GUICtrlRead($MonthCal,2),"/","-") & "\HorarioEntrada2", GUICtrlRead($enterTimeInput2))
+   FileWrite("funcionarios\" & GUICtrlRead($usersList) & "\" & StringReplace(GUICtrlRead($MonthCal,2),"/","-") & "\HorarioSaida", GUICtrlRead($exitTimeInput))
+   FileWrite("funcionarios\" & GUICtrlRead($usersList) & "\" & StringReplace(GUICtrlRead($MonthCal,2),"/","-") & "\HorarioSaida2", GUICtrlRead($exitTimeInput2))
 EndFunc
 
 Func updateInfoUsersList()
-
+   $previous = GUICtrlRead($usersList)
+	  If Not(GUICtrlRead($usersList) == "") Then ;Esse if serve para quando excluir um funcioonário não ficar bugado a caixa de informações
+		 GUICtrlSetData($usersInfoList, "")
+		 If FileExists("funcionarios\" & GUICtrlRead($usersList) & "\" & StringReplace(GUICtrlRead($MonthCal,2),"/","-")) Then
+			listUserInfo($usersInfoList, $usersList)
+		 Else
+			GUICtrlSetData($usersInfoList, 'Sem dados para o funcionário "' & GUICtrlRead($usersList) & '" para o dia ' & GUICtrlRead($MonthCal,2))
+			GUICtrlSetData($usersInfoList, 'Clique no botão "Editar/Inserir Informações" para inserir informações para este funcionário.')
+		 EndIf
+	  EndIf
 EndFunc
 
 Func updateListOfUsers()
