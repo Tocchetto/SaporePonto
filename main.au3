@@ -186,15 +186,11 @@ Func calculateWorkedHours($entrada, $saida, $entrada2, $saida2)
 	  ;ConsoleWrite("Time Worked After Interval: " & $difHTimeAfterInterval & ":" & $difMTimeAfterInterval & @CRLF)
 
    $workedH = $difHTimeBeforeInterval + $difHTimeAfterInterval
-   ConsoleWrite("$difHTimeBeforeInterval: " & $difHTimeBeforeInterval & " $difHTimeAfterInterval: " & $difHTimeAfterInterval & @CRLF)
-	  ConsoleWrite("$workedH: " & $workedH & @CRLF)
    $workedM = $difMTimeBeforeInterval + $difMTimeAfterInterval
    While $workedM > 59
 	  $workedM = $workedM - 60
 	  $workedH = $workedH + 1
    WEnd
-   ConsoleWrite("$difMTimeBeforeInterval: " & $difMTimeBeforeInterval & " $difMTimeAfterInterval: " & $difMTimeAfterInterval & @CRLF)
-	  ConsoleWrite("$workedM: " & $workedM & @CRLF)
 
 
 
