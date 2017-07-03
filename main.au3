@@ -45,6 +45,8 @@ While 1
 			If FileExists(@ScriptDir & "\Funcionarios\" & $userName) Then
 			   MsgBox(0, "Sucesso", "Usuário criado com sucesso!",1)
 			   updateListOfUsers()
+			Else
+			   MsgBox(0, "Erro", "Usuário erro ao criar funcionário.",1)
 			EndIf
 		 EndIf
 	  Case $deleteUser
@@ -58,6 +60,7 @@ While 1
 			   Else
 			   GUICtrlSetData($usersList, "")
 			   updateListOfUsers()
+			   updateInfoUsersList()
 			   EndIf
 			Else
 			   MsgBox(0,"Cancelado", "Nenhuma alteração foi feita!")
@@ -77,8 +80,59 @@ While 1
  WEnd
 
 Func listUserInfo($usersInfoList, $usersList)
-   GUICtrlSetData($usersInfoList, "Informações do Usuário: " & GUICtrlRead($usersList))
+   $funcTimes = getFuncTimes()
+   GUICtrlSetData($usersInfoList, "Informações do Funcionário: " & GUICtrlRead($usersList))
+   GUICtrlSetData($usersInfoList, "Horário de Entrada: " & $funcTimes[0])
+   GUICtrlSetData($usersInfoList, "Horário de Saída: " & $funcTimes[1])
+   GUICtrlSetData($usersInfoList, "Tempo de Intervalo: " & calculateInterval($funcTimes[0],$funcTimes[1],$funcTimes[2],$funcTimes[3]))
+   GUICtrlSetData($usersInfoList, "Horário de Entrada: " & $funcTimes[2])
+   GUICtrlSetData($usersInfoList, "Horário de Saída: " & $funcTimes[3])
    ;Colocar o resto dos dados aqui
+EndFunc
+
+;Retorna um vetor com todos os horário do funcionário
+Func getFuncTimes()
+   Local $funcTimes[4]
+   $funcTimes[0] = FileRead("funcionarios\" & GUICtrlRead($usersList) & "\" & StringReplace(GUICtrlRead($MonthCal,2),"/","-") & "\HorarioEntrada")
+   $funcTimes[1] = FileRead("funcionarios\" & GUICtrlRead($usersList) & "\" & StringReplace(GUICtrlRead($MonthCal,2),"/","-") & "\HorarioSaida")
+   $funcTimes[2] = FileRead("funcionarios\" & GUICtrlRead($usersList) & "\" & StringReplace(GUICtrlRead($MonthCal,2),"/","-") & "\HorarioEntrada2")
+   $funcTimes[3] = FileRead("funcionarios\" & GUICtrlRead($usersList) & "\" & StringReplace(GUICtrlRead($MonthCal,2),"/","-") & "\HorarioSaida2")
+   return $funcTimes
+EndFunc
+
+Func calculateInterval($entrada, $saida, $entrada2, $saida2)
+   $arrayEntrada1 = StringSplit($entrada, "")
+   $arraySaida1 = StringSplit($saida, "")
+
+   $enterHTime = ($arrayEntrada1[1]*10) + $arrayEntrada1[2]
+   $enterMTime = ($arrayEntrada1[4]*10) + $arrayEntrada1[5]
+   $outHTime = ($arraySaida1[1]*10) + $arraySaida1[2]
+   $outMTime = ($arraySaida1[4]*10) + $arraySaida1[5]
+
+   ConsoleWrite("EnterTime: " & $enterHTime & @CRLF)
+   ConsoleWrite("OutTime: " & $outHTime & @CRLF)
+   ConsoleWrite("OutTime-EnterTime: " & $outHTime-$enterHTime & @CRLF)
+
+   $IntervalHTime = $outHTime - $enterHTime
+   If($outMTime < $enterMTime)Then
+	  $IntervalHTime = $IntervalHTime - 1
+	  $IntervalMTime = $outMTime+60-$enterMTime
+   Else
+	  $IntervalMTime = $outMTime - $enterMTime
+   EndIf
+
+   If($IntervalHTime < 10)Then
+	  $IntervalHTime = "0" & $IntervalHTime
+   EndIf
+   If($IntervalMTime < 10)Then
+	  $IntervalMTime = "0" & $IntervalMTime
+   EndIf
+
+   Return ($IntervalHTime & ":" & $IntervalMTime)
+EndFunc
+
+Func calculateWorkedHours()
+
 EndFunc
 
 Func createUserFiles()
@@ -91,15 +145,19 @@ EndFunc
 
 Func updateInfoUsersList()
    $previous = GUICtrlRead($usersList)
-	  If Not(GUICtrlRead($usersList) == "") Then ;Esse if serve para quando excluir um funcioonário não ficar bugado a caixa de informações
-		 GUICtrlSetData($usersInfoList, "")
-		 If FileExists("funcionarios\" & GUICtrlRead($usersList) & "\" & StringReplace(GUICtrlRead($MonthCal,2),"/","-")) Then
-			listUserInfo($usersInfoList, $usersList)
-		 Else
-			GUICtrlSetData($usersInfoList, 'Sem dados para o funcionário "' & GUICtrlRead($usersList) & '" para o dia ' & GUICtrlRead($MonthCal,2))
-			GUICtrlSetData($usersInfoList, 'Clique no botão "Editar/Inserir Informações" para inserir informações para este funcionário.')
-		 EndIf
+   If (GUICtrlRead($usersList) == "") Then ;Esse if serve para quando excluir um funcioonário não ficar bugado a caixa de informações
+	  GUICtrlSetData($usersInfoList, "")
+   EndIf
+
+   If Not(GUICtrlRead($usersList) == "") Then
+	  GUICtrlSetData($usersInfoList, "")
+	  If FileExists("funcionarios\" & GUICtrlRead($usersList) & "\" & StringReplace(GUICtrlRead($MonthCal,2),"/","-")) Then
+		 listUserInfo($usersInfoList, $usersList)
+	  Else
+		 GUICtrlSetData($usersInfoList, 'Sem dados para o funcionário "' & GUICtrlRead($usersList) & '" para o dia ' & GUICtrlRead($MonthCal,2))
+		 GUICtrlSetData($usersInfoList, 'Clique no botão "Editar/Inserir Informações" para inserir informações para este funcionário.')
 	  EndIf
+   EndIf
 EndFunc
 
 Func updateListOfUsers()

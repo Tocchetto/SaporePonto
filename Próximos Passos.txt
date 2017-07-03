@@ -1,0 +1,5 @@
+Não deixar o usuário inserir um padrão diferente de "08:23" para um funcionário
+O horário inserido sempre deve possuir 5 caracteres contando com o ":"
+A hora vai até "23" e o minuto até "59", ou seja, para representar "meia-noite" 
+o usuário deverá digitar "00:00". (para calcular uma entrada as 23:00 e saida as 02:00 fica:
+2+24-23 = horário trabalhado)
