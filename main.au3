@@ -82,11 +82,17 @@ While 1
 Func listUserInfo($usersInfoList, $usersList)
    $funcTimes = getFuncTimes()
    GUICtrlSetData($usersInfoList, "Informações do Funcionário: " & GUICtrlRead($usersList))
+   GUICtrlSetData($usersInfoList, "---------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
    GUICtrlSetData($usersInfoList, "Horário de Entrada: " & $funcTimes[0])
    GUICtrlSetData($usersInfoList, "Horário de Saída: " & $funcTimes[1])
-   GUICtrlSetData($usersInfoList, "Tempo de Intervalo: " & calculateInterval($funcTimes[0],$funcTimes[1],$funcTimes[2],$funcTimes[3]))
+   GUICtrlSetData($usersInfoList, " ")
+   GUICtrlSetData($usersInfoList, "Tempo de Intervalo: " & calculateInterval($funcTimes[1],$funcTimes[2]))
+   GUICtrlSetData($usersInfoList, "		")
    GUICtrlSetData($usersInfoList, "Horário de Entrada: " & $funcTimes[2])
    GUICtrlSetData($usersInfoList, "Horário de Saída: " & $funcTimes[3])
+   GUICtrlSetData($usersInfoList, "		" & @CRLF)
+   GUICtrlSetData($usersInfoList, "Total de Horas Trabalhadas: " & calculateWorkedHours($funcTimes[0],$funcTimes[1],$funcTimes[2],$funcTimes[3]))
+   GUICtrlSetData($usersInfoList, "---------------------------------------------------------------------------------------------------------------------------------------------------------------------------" & @CRLF)
    ;Colocar o resto dos dados aqui
 EndFunc
 
@@ -100,20 +106,21 @@ Func getFuncTimes()
    return $funcTimes
 EndFunc
 
-Func calculateInterval($entrada, $saida, $entrada2, $saida2)
-   $arrayEntrada1 = StringSplit($entrada, "")
-   $arraySaida1 = StringSplit($saida, "")
+Func calculateInterval($saida, $entrada2)
+   $arraySaida = StringSplit($saida, "")
+   $arrayEntrada2 = StringSplit($entrada2, "")
 
-   $enterHTime = ($arrayEntrada1[1]*10) + $arrayEntrada1[2]
-   $enterMTime = ($arrayEntrada1[4]*10) + $arrayEntrada1[5]
-   $outHTime = ($arraySaida1[1]*10) + $arraySaida1[2]
-   $outMTime = ($arraySaida1[4]*10) + $arraySaida1[5]
+   $enterHTime = ($arraySaida[1]*10) + $arraySaida[2]
+   $enterMTime = ($arraySaida[4]*10) + $arraySaida[5]
+   $outHTime = ($arrayEntrada2[1]*10) + $arrayEntrada2[2]
+   $outMTime = ($arrayEntrada2[4]*10) + $arrayEntrada2[5]
 
-   ConsoleWrite("EnterTime: " & $enterHTime & @CRLF)
-   ConsoleWrite("OutTime: " & $outHTime & @CRLF)
-   ConsoleWrite("OutTime-EnterTime: " & $outHTime-$enterHTime & @CRLF)
+   If($outHTime < $enterHTime)Then
+	  $IntervalHTime = $outHTime + 24 - $enterHTime
+   Else
+	  $IntervalHTime = $outHTime - $enterHTime
+   EndIf
 
-   $IntervalHTime = $outHTime - $enterHTime
    If($outMTime < $enterMTime)Then
 	  $IntervalHTime = $IntervalHTime - 1
 	  $IntervalMTime = $outMTime+60-$enterMTime
@@ -131,8 +138,74 @@ Func calculateInterval($entrada, $saida, $entrada2, $saida2)
    Return ($IntervalHTime & ":" & $IntervalMTime)
 EndFunc
 
-Func calculateWorkedHours()
+Func calculateWorkedHours($entrada, $saida, $entrada2, $saida2)
+   $arrayEntrada = StringSplit($entrada, "")
+   $arraySaida = StringSplit($saida, "")
+   $arrayEntrada2 = StringSplit($entrada2, "")
+   $arraySaida2 = StringSplit($saida2, "")
 
+   $enterHTime = ($arrayEntrada[1]*10) + $arrayEntrada[2]
+   $enterMTime = ($arrayEntrada[4]*10) + $arrayEntrada[5]
+   $outHTime = ($arraySaida[1]*10) + $arraySaida[2]
+   $outMTime = ($arraySaida[4]*10) + $arraySaida[5]
+   $enter2HTime = ($arrayEntrada2[1]*10) + $arrayEntrada2[2]
+   $enter2MTime = ($arrayEntrada2[4]*10) + $arrayEntrada2[5]
+   $out2HTime = ($arraySaida2[1]*10) + $arraySaida2[2]
+   $out2MTime = ($arraySaida2[4]*10) + $arraySaida2[5]
+
+   If($outHTime < $enterHTime)Then
+	  $difHTimeBeforeInterval = $outHTime + 24 - $enterHTime
+   Else
+	  $difHTimeBeforeInterval = $outHTime - $enterHTime
+   EndIf
+
+   If($outMTime < $enterMTime)Then
+	  $difHTimeBeforeInterval = $difHTimeBeforeInterval - 1
+	  $difMTimeBeforeInterval = $outMTime + 60 - $enterMTime
+   Else
+	  $difMTimeBeforeInterval = $outMTime - $enterMTime
+   EndIf
+
+	  ;ConsoleWrite("Time Worked Before Interval: " & $difHTimeBeforeInterval & ":" & $difMTimeBeforeInterval & @CRLF)
+
+   If($out2HTime < $enter2HTime)Then
+	  $difHTimeAfterInterval = $out2HTime + 24 - $enter2HTime
+   Else
+	  ;ConsoleWrite("$out2HTime: " & $out2HTime & " $enter2HTime: " & $enter2HTime & @CRLF)
+	  $difHTimeAfterInterval = $out2HTime - $enter2HTime
+	  ;ConsoleWrite("$difHTimeAfterInterval: " & $difHTimeAfterInterval & @CRLF)
+   EndIf
+
+   If($out2MTime < $enter2MTime)Then
+	  $difHTimeAfterInterval = $difHTimeAfterInterval - 1
+	  $difMTimeAfterInterval = $out2MTime + 60 - $enter2MTime
+   Else
+	  $difMTimeAfterInterval = $out2MTime - $enter2MTime
+   EndIf
+
+	  ;ConsoleWrite("Time Worked After Interval: " & $difHTimeAfterInterval & ":" & $difMTimeAfterInterval & @CRLF)
+
+   $workedH = $difHTimeBeforeInterval + $difHTimeAfterInterval
+   ConsoleWrite("$difHTimeBeforeInterval: " & $difHTimeBeforeInterval & " $difHTimeAfterInterval: " & $difHTimeAfterInterval & @CRLF)
+	  ConsoleWrite("$workedH: " & $workedH & @CRLF)
+   $workedM = $difMTimeBeforeInterval + $difMTimeAfterInterval
+   While $workedM > 59
+	  $workedM = $workedM - 60
+	  $workedH = $workedH + 1
+   WEnd
+   ConsoleWrite("$difMTimeBeforeInterval: " & $difMTimeBeforeInterval & " $difMTimeAfterInterval: " & $difMTimeAfterInterval & @CRLF)
+	  ConsoleWrite("$workedM: " & $workedM & @CRLF)
+
+
+
+   if($workedH < 10) Then
+	  $workedH = "0" & $workedH
+   EndIf
+   If($workedM < 10)Then
+	  $workedM = "0" & $workedM
+   EndIf
+
+   Return($workedH & ":" & $workedM)
 EndFunc
 
 Func createUserFiles()
