@@ -15,7 +15,7 @@ Func Terminate()
 EndFunc
 
 #Region ### START Koda GUI section ### Form=C:\Users\Zelp\Google Drive\Pessoal\Bots\SaporePonto\Interface das Informações de Pesca KODA.kxf
-$mainGUI = GUICreate("SaporePonto", 1074, 486, 581, 288)
+$mainGUI = GUICreate("SaporePonto", 1074, 486, -1, -1)
 $usersList = GUICtrlCreateList("", 16, 32, 281, 422)
 $usersListLabel = GUICtrlCreateLabel("Lista de Funcionários", 16, 14, 104, 17)
 $addUser = GUICtrlCreateButton("Acrescentar Funcionário", 152, 456, 147, 25)
@@ -37,47 +37,62 @@ While 1
 	  Case $GUI_EVENT_CLOSE
 		 Exit
 	  Case $addUser
-		 $userName = InputBox("Acrecentando um Novo Funcionário", "Digite o Nome Completo do Funcionário:", "", "", 300, 126)
-		 If FileExists(@ScriptDir & "\Funcionarios\" & $userName) Then
-			MsgBox(48,"Erro", "Usuário já existe!")
-		 Else
-			DirCreate(@ScriptDir & "\Funcionarios\" & $userName)
-			If FileExists(@ScriptDir & "\Funcionarios\" & $userName) Then
-			   MsgBox(0, "Sucesso", "Usuário criado com sucesso!",1)
-			   updateListOfUsers()
-			Else
-			   MsgBox(0, "Erro", "Usuário erro ao criar funcionário.",1)
-			EndIf
-		 EndIf
+		 addUser()
 	  Case $deleteUser
-		 If GUICtrlRead($usersList) == "" Then
-			MsgBox(48,"Erro", "Você precisa selecionar um usuário para excluí-lo!")
-		 Else
-			$res = MsgBox(1,"Atenção!", "Essa ação não pode ser desfeita e todas as informações do funcionário serão perdidas!")
-			If $res == 1 Then
-			   If DirRemove(@ScriptDir & "\Funcionarios\" & GUICtrlRead($usersList),1) == 0 Then
-				  MsgBox(0,"Erro","Erro ao excluir funcionário, favor notificar o erro para Guilherme Tocchetto (54) 99910-4658")
-			   Else
-			   GUICtrlSetData($usersList, "")
-			   updateListOfUsers()
-			   updateInfoUsersList()
-			   EndIf
-			Else
-			   MsgBox(0,"Cancelado", "Nenhuma alteração foi feita!")
-			EndIf
-		 EndIf
+		 deleteUser()
 	  Case $editUser
-		 If GUICtrlRead($usersList) == "" Then
-			MsgBox(48,"Usuário não selecionado", "Selecione um usuário para editar ou inserir informações!")
-		 Else
-			editInsertInterface()
-			GUICtrlSetData($usersInfoList, "")
-			$previous = ""
-		 EndIf
+		 editUser()
 	  Case $MonthCal
 		 updateInfoUsersList()
 	EndSwitch
  WEnd
+
+Func addUser()
+   $userName = InputBox("Acrecentando um Novo Funcionário", "Digite o Nome Completo do Funcionário:", "", "", 300, 126)
+   If(@error == 0) Then ;Se ele não clicou em cancelar
+	  If FileExists(@ScriptDir & "\Funcionarios\" & $userName) Then
+		 MsgBox(48,"Erro", "Usuário já existe!")
+		 addUser()
+	  Else
+		 DirCreate(@ScriptDir & "\Funcionarios\" & $userName)
+		 If FileExists(@ScriptDir & "\Funcionarios\" & $userName) Then
+			MsgBox(0, "Sucesso", "Usuário criado com sucesso!",1)
+			updateListOfUsers()
+		 Else
+			MsgBox(0, "Erro", "Erro ao criar funcionário, tente novamente.",1)
+		 EndIf
+	  EndIf
+   EndIf
+EndFunc
+
+Func deleteUser()
+   If GUICtrlRead($usersList) == "" Then
+	  MsgBox(48,"Erro", "Você precisa selecionar um usuário para excluí-lo!")
+   Else
+	  $res = MsgBox(1,"Atenção!", "Essa ação não pode ser desfeita e todas as informações do funcionário serão perdidas!")
+	  If $res == 1 Then
+		 If DirRemove(@ScriptDir & "\Funcionarios\" & GUICtrlRead($usersList),1) == 0 Then
+			MsgBox(0,"Erro","Erro ao excluir funcionário, favor notificar o erro para Guilherme Tocchetto (54) 99910-4658")
+		 Else
+		 GUICtrlSetData($usersList, "")
+		 updateListOfUsers()
+		 updateInfoUsersList()
+		 EndIf
+	  Else
+		 MsgBox(0,"Cancelado", "Nenhuma alteração foi feita!")
+	  EndIf
+   EndIf
+EndFunc
+
+Func editUser()
+   If GUICtrlRead($usersList) == "" Then
+	  MsgBox(48,"Usuário não selecionado", "Selecione um usuário para editar ou inserir informações!")
+   Else
+	  editInsertInterface()
+	  GUICtrlSetData($usersInfoList, "")
+	  $previous = ""
+   EndIf
+EndFunc
 
 Func listUserInfo($usersInfoList, $usersList)
    $funcTimes = getFuncTimes()
@@ -204,7 +219,12 @@ Func calculateWorkedHours($entrada, $saida, $entrada2, $saida2)
    Return($workedH & ":" & $workedM)
 EndFunc
 
-Func createUserFiles()
+Func deleteUserFiles()
+   DirRemove("funcionarios\" & GUICtrlRead($usersList) & "\" & StringReplace(GUICtrlRead($MonthCal,2),"/","-"),1)
+EndFunc
+
+Func editUserFiles()
+   DirRemove("funcionarios\" & GUICtrlRead($usersList) & "\" & StringReplace(GUICtrlRead($MonthCal,2),"/","-"), 1)
    DirCreate("funcionarios\" & GUICtrlRead($usersList) & "\" & StringReplace(GUICtrlRead($MonthCal,2),"/","-"))
    FileWrite("funcionarios\" & GUICtrlRead($usersList) & "\" & StringReplace(GUICtrlRead($MonthCal,2),"/","-") & "\HorarioEntrada", GUICtrlRead($enterTimeInput))
    FileWrite("funcionarios\" & GUICtrlRead($usersList) & "\" & StringReplace(GUICtrlRead($MonthCal,2),"/","-") & "\HorarioEntrada2", GUICtrlRead($enterTimeInput2))
@@ -221,6 +241,7 @@ Func updateInfoUsersList()
    If Not(GUICtrlRead($usersList) == "") Then
 	  GUICtrlSetData($usersInfoList, "")
 	  If FileExists("funcionarios\" & GUICtrlRead($usersList) & "\" & StringReplace(GUICtrlRead($MonthCal,2),"/","-")) Then
+		 ConsoleWrite("GG" & @CRLF)
 		 listUserInfo($usersInfoList, $usersList)
 	  Else
 		 GUICtrlSetData($usersInfoList, 'Sem dados para o funcionário "' & GUICtrlRead($usersList) & '" para o dia ' & GUICtrlRead($MonthCal,2))
