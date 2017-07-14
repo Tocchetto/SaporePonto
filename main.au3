@@ -26,6 +26,8 @@ $deleteUser = GUICtrlCreateButton("Excluir", 16, 456, 75, 25)
 GUISetState(@SW_SHOW)
 #EndRegion ### END Koda GUI section ###
 
+Global $userName
+
 updateListOfUsers()
 $previous = ""
 While 1
@@ -241,7 +243,6 @@ Func updateInfoUsersList()
    If Not(GUICtrlRead($usersList) == "") Then
 	  GUICtrlSetData($usersInfoList, "")
 	  If FileExists("funcionarios\" & GUICtrlRead($usersList) & "\" & StringReplace(GUICtrlRead($MonthCal,2),"/","-")) Then
-		 ConsoleWrite("GG" & @CRLF)
 		 listUserInfo($usersInfoList, $usersList)
 	  Else
 		 GUICtrlSetData($usersInfoList, 'Sem dados para o funcionário "' & GUICtrlRead($usersList) & '" para o dia ' & GUICtrlRead($MonthCal,2))
